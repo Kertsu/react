@@ -19,6 +19,7 @@ import ButtonIcon from '../ButtonIcon';
 import InspectedElementBadges from '../Components/InspectedElementBadges';
 
 import styles from './SidebarSelectedFiberInfo.css';
+import StickyCollapsibleHeader from './StickyCollapsibleHeader';
 
 export default function SidebarSelectedFiberInfo(): React.Node {
   const {profilerStore} = useContext(StoreContext);
@@ -116,6 +117,19 @@ export default function SidebarSelectedFiberInfo(): React.Node {
     );
   }
 
+  let selectedCommitTime = 0;
+  let selectedCommitDuration = 0;
+
+  // $FlowFixMe[invalid-compare]
+  if (selectedCommitIndex !== null && rootID !== null) {
+    const commitData = profilerStore.getCommitData(
+      rootID as any as number,
+      selectedCommitIndex,
+    );
+    selectedCommitTime = commitData.timestamp;
+    selectedCommitDuration = commitData.duration;
+  }
+
   return (
     <Fragment>
       <div className={styles.Toolbar}>
@@ -129,14 +143,24 @@ export default function SidebarSelectedFiberInfo(): React.Node {
           <ButtonIcon type="close" />
         </Button>
       </div>
-      <div className={styles.Content} onKeyDown={handleKeyDown} tabIndex={0}>
-        {node != null && (
-          <InspectedElementBadges
-            hocDisplayNames={node.hocDisplayNames}
-            compiledWithForget={node.compiledWithForget}
-          />
-        )}
-        <WhatChanged fiberID={selectedFiberID as any as number} />
+      <div className={styles.Content} onKeyDown={handleKeyDown}>
+        <StickyCollapsibleHeader
+          summary={
+            <span className={styles.CurrentRenderInfo}>
+              <strong>
+                {formatTime(selectedCommitTime)}s for{' '}
+                {formatDuration(selectedCommitDuration)}ms
+              </strong>
+            </span>
+          }>
+          {node != null && (
+            <InspectedElementBadges
+              hocDisplayNames={node.hocDisplayNames}
+              compiledWithForget={node.compiledWithForget}
+            />
+          )}
+          <WhatChanged fiberID={selectedFiberID as any as number} />
+        </StickyCollapsibleHeader>
         {listItems.length > 0 && (
           <div>
             <label className={styles.Label}>Rendered at: </label>
